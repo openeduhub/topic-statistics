@@ -1,0 +1,9 @@
+setuptools
+# data manipulation
+numpy
+pandas
+data-utils
+# webservice
+uvicorn
+pydantic
+fastapi
