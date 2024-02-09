@@ -1,16 +1,14 @@
 import argparse
-from enum import Enum
-from pathlib import Path
-from typing import Literal, Optional, Union
 from functools import partial
+from pathlib import Path
+from typing import Optional
 
 import data_utils.filters as filt
 import pandas as pd
 import uvicorn
-from data_utils.default_pipelines.data import Data
 from data_utils.default_pipelines.flat_classification import generate_data
-from data_utils.defaults import Fields
 from data_utils.fetch import fetch
+from data_utils.defaults import Grouped_Fields
 from fastapi import FastAPI
 from nlprep import Iterable
 from pydantic import BaseModel
@@ -29,10 +27,24 @@ def main():
         "--host", action="store", default="0.0.0.0", help="Hosts to listen on", type=str
     )
     parser.add_argument(
+        "--username",
+        action="store",
+        default=None,
+        help="The username to use when running a data update and authenticating at the source.",
+        type=str,
+    )
+    parser.add_argument(
+        "--password",
+        action="store",
+        default=None,
+        help="The password to use when running a data update and authenticating at the source.",
+        type=str,
+    )
+    parser.add_argument(
         "--data-dir",
         action="store",
         default="./data",
-        help="The directory in which the data shall be stored.",
+        help="The directory in which the data shall be stored. Creates directories if necessary.",
     )
     parser.add_argument(
         "--version",
@@ -47,11 +59,20 @@ def main():
     data_dir = Path(args.data_dir)
     generate_data_fun = partial(
         generate_data,
-        target_fields=[x.value for x in Fields],
+        target_fields=[x.value for x in Grouped_Fields],
         use_defaults=True,
         skip_labels=True,
         # we only need data that is part of at least one collection
-        filters=[filt.get_len_filter([Fields.TOPIC.value], min_lengths=1)],
+        # or has at least one topic assigned
+        filters=[
+            filt.get_len_filter(
+                [
+                    Grouped_Fields.TOPIC.value,
+                    Grouped_Fields.COLLECTIONS_LOCATION.value,
+                ],
+                min_lengths=1,
+            )
+        ],
     )
 
     global data
@@ -62,19 +83,16 @@ def main():
 
     # Data types
     class Input_Update(BaseModel):
-        username: Optional[str] = None
-        password: Optional[str] = None
-        url: str = "https://elasticdump.staging.openeduhub.net"
-        data_set: str = "workspace_data-public-only.json.gz"
         skip_if_exists: bool = True
 
     class Input_Stats(BaseModel):
         topic_uri: str
-        group_by_fields: Optional[Iterable[Fields]] = None
+        topic_url: str
+        group_by_fields: Optional[Iterable[Grouped_Fields]] = None
 
     class Output_Stats(BaseModel):
         total: Count
-        by_fields: Optional[dict[Fields, dict[str, Count]]] = None
+        by_fields: Optional[dict[Grouped_Fields, dict[str, Count]]] = None
 
     app = FastAPI()
 
@@ -85,11 +103,11 @@ def main():
     @app.post("/update-data")
     async def update_data(inp: Input_Update):
         new_json = fetch(
-            base_url=inp.url,
-            target_file=inp.data_set,
+            base_url="https://elasticdump.prod.openeduhub.net",
+            target_file="workspace_data-public-only.json.gz",
             output_dir=data_dir,
-            username=inp.username,
-            password=inp.password,
+            username=args.username,
+            password=args.password,
             skip_if_exists=inp.skip_if_exists,
         )
 
@@ -104,11 +122,16 @@ def main():
         grouped_counts = None
         if inp.group_by_fields is not None:
             grouped_counts = {
-                field: count_by_field(data, inp.topic_uri, field)
+                field: count_by_field(
+                    data, topic_uri=inp.topic_uri, topic_url=inp.topic_url, field=field
+                )
                 for field in inp.group_by_fields
             }
 
-        return Output_Stats(total=count(data, inp.topic_uri), by_fields=grouped_counts)
+        return Output_Stats(
+            total=count(data, topic_uri=inp.topic_uri, topic_url=inp.topic_url),
+            by_fields=grouped_counts,
+        )
 
     uvicorn.run(app, host=args.host, port=args.port, reload=False)
 

@@ -1,0 +1,13 @@
+:PROPERTIES:
+:header-args: :results verbatim :exports both :session demo.py :async yes :var foo=imports
+:END:
+#+title: Topic Statistics
+#+EXPORT_EXCLUDE_TAGS: noexport
+
+* Usage
+
+** Through Nix
+
+#+begin_src shell
+nix run github:openeduhub/topic-statistics -- --help
+#+end_src
