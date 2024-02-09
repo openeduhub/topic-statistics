@@ -5,12 +5,6 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter";
-    openapi-checks = {
-      url = "github:openeduhub/nix-openapi-checks";
-      inputs = {
-        flake-utils.follows = "flake-utils";
-      };
-    };
     data-utils = {
       url = "github:openeduhub/data-utils";
       inputs = {
