@@ -85,6 +85,7 @@
             topic-statistics = self.outputs.lib.default python-final;
           })
         ];
+        topic-statistics = self.outputs.packages.${final.system}.default;
       });
     } //
     flake-utils.lib.eachDefaultSystem
