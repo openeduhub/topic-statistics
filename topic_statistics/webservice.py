@@ -14,7 +14,13 @@ from nlprep import Iterable
 from pydantic import BaseModel
 
 from topic_statistics._version import __version__
-from topic_statistics.statistics import Count, count, count_by_field
+from topic_statistics.statistics import (
+    Category_Count,
+    Count,
+    count,
+    count_by_field,
+    Field_Counts,
+)
 
 
 def main():
@@ -92,7 +98,7 @@ def main():
 
     class Output_Stats(BaseModel):
         total: Count
-        by_fields: Optional[dict[Grouped_Fields, dict[str, Count]]] = None
+        by_fields: Optional[list[Field_Counts]] = None
 
     app = FastAPI()
 
@@ -130,7 +136,22 @@ def main():
 
         return Output_Stats(
             total=count(data, topic_uri=inp.topic_uri, topic_url=inp.topic_url),
-            by_fields=grouped_counts,
+            by_fields=[
+                Field_Counts(
+                    field=field.value,
+                    counts=[
+                        Category_Count(
+                            total=count.total,
+                            editorially_confirmed=count.editorially_confirmed,
+                            category=category,
+                        )
+                        for category, count in value.items()
+                    ],
+                )
+                for field, value in grouped_counts.items()
+            ]
+            if grouped_counts is not None
+            else None,
         )
 
     uvicorn.run(app, host=args.host, port=args.port, reload=False)

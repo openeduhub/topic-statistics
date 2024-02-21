@@ -11,6 +11,15 @@ class Count(BaseModel):
     editorially_confirmed: int
 
 
+class Category_Count(Count):
+    category: str
+
+
+class Field_Counts(BaseModel):
+    field: str
+    counts: list[Category_Count]
+
+
 def count(data: Data, topic_uri: str, topic_url: str) -> Count:
     """
     Get the count statistics for data that belongs to the topic or collection.
