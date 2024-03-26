@@ -1,8 +1,8 @@
 from typing import Optional
 
 import numpy as np
-from data_utils.default_pipelines.data import Data, subset_data_points
-from data_utils.defaults import Fields, Grouped_Fields
+from its_data.default_pipelines.data import Data, subset_data_points
+from its_data.defaults import Fields
 from pydantic import BaseModel
 
 
@@ -29,7 +29,7 @@ def count(data: Data, topic_uri: str, topic_url: str) -> Count:
 
 
 def count_by_field(
-    data: Data, topic_uri: str, topic_url: str, field: Grouped_Fields
+    data: Data, topic_uri: str, topic_url: str, field: Fields
 ) -> dict[str, Count]:
     """Like :func:`count`, but also groups by a metadata field."""
     topic_data = _get_relevant(data, topic_uri, topic_url)

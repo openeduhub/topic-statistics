@@ -5,8 +5,8 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter";
-    data-utils = {
-      url = "github:openeduhub/data-utils";
+    its-data = {
+      url = "github:openeduhub/its-data";
       inputs = {
         flake-utils.follows = "flake-utils";
         nixpkgs.follows = "nixpkgs";
@@ -25,7 +25,7 @@
           # data manipulation
           numpy
           pandas
-          data-utils
+          its-data
           # webservice
           uvicorn
           pydantic
@@ -92,7 +92,7 @@
       (system:
         let
           pkgs = nixpkgs.legacyPackages.${system}.extend
-            self.inputs.data-utils.overlays.default;
+            self.inputs.its-data.overlays.default;
           python = pkgs.python3;
           python-app = get-python-app python.pkgs;
         in

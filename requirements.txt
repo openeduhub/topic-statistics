@@ -2,7 +2,7 @@ setuptools
 # data manipulation
 numpy
 pandas
-data-utils
+its-data
 # webservice
 uvicorn
 pydantic

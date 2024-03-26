@@ -1,25 +1,25 @@
 import argparse
+from collections.abc import Iterable
 from functools import partial
 from pathlib import Path
 from typing import Optional
 
-import data_utils.filters as filt
+import its_data.filters as filt
 import pandas as pd
 import uvicorn
-from data_utils.default_pipelines.flat_classification import generate_data
-from data_utils.fetch import fetch
-from data_utils.defaults import Grouped_Fields
 from fastapi import FastAPI
-from nlprep import Iterable
-from pydantic import BaseModel
+from its_data.default_pipelines.flat_classification import generate_data
+from its_data.defaults import Fields
+from its_data.fetch import fetch
+from pydantic import BaseModel, Field
 
 from topic_statistics._version import __version__
 from topic_statistics.statistics import (
     Category_Count,
     Count,
+    Field_Counts,
     count,
     count_by_field,
-    Field_Counts,
 )
 
 
@@ -65,7 +65,7 @@ def main():
     data_dir = Path(args.data_dir)
     generate_data_fun = partial(
         generate_data,
-        target_fields=[x.value for x in Grouped_Fields],
+        target_fields=[x.value for x in Fields],
         use_defaults=True,
         skip_labels=True,
         # we only need data that is part of at least one collection
@@ -73,8 +73,8 @@ def main():
         filters=[
             filt.get_len_filter(
                 [
-                    Grouped_Fields.TOPIC.value,
-                    Grouped_Fields.COLLECTIONS_LOCATION.value,
+                    Fields.TOPIC.value,
+                    Fields.COLLECTIONS_LOCATION.value,
                 ],
                 min_lengths=1,
             )
@@ -94,7 +94,9 @@ def main():
     class Input_Stats(BaseModel):
         topic_uri: str
         topic_url: str
-        group_by_fields: Optional[Iterable[Grouped_Fields]] = None
+        group_by_fields: Optional[Iterable[Fields]] = Field(
+            default=None, examples=[[Fields.TAXONID.value]]
+        )
 
     class Output_Stats(BaseModel):
         total: Count
