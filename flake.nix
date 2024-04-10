@@ -79,14 +79,19 @@
         default = get-python-package;
       };
       # define an overlay to the library to nixpkgs
-      overlays.default = (final: prev: {
-        pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
-          (python-final: python-prev: {
-            topic-statistics = self.outputs.lib.default python-final;
-          })
-        ];
-        topic-statistics = self.outputs.packages.${final.system}.default;
-      });
+      overlays = {
+        default = (final: prev: {
+          topic-statistics = self.outputs.packages.${final.system}.default;
+        });
+        
+        python-lib = nixpkgs.lib.composeExtensions self.inputs.its-data.overlays.default (final: prev: {
+          pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+            (python-final: python-prev: {
+              topic-statistics = self.outputs.lib.default python-final;
+            })
+          ];
+        });
+      };
     } //
     flake-utils.lib.eachDefaultSystem
       (system:
