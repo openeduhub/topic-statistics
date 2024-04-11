@@ -4,6 +4,8 @@
 #+title: Topic Statistics
 #+EXPORT_EXCLUDE_TAGS: noexport
 
+A very simple application that computes various statistics on WLO topic pages, based on a downloaded copy of the database.
+
 * Usage
 
 ** Through Nix
@@ -11,3 +13,9 @@
 #+begin_src shell
 nix run github:openeduhub/topic-statistics -- --help
 #+end_src
+
+* Possible Improvements
+
+1. Rather than building a separate service for this, integrate the (minimal) logic found here into [[https://github.com/openeduhub/metaqs-main][meta-qs]].
+2. Rather than using a downloaded copy of the entire data set, access the (private) ~ElasticSearch~, similarly to how it is done in ~meta-qs~.
+3. Collect all possible collections (see e.g. [[https://github.com/openeduhub/its-data/blob/a271668a74a1177706806f21013988d474ffd6df/its_data/filters.py#L172-L177][a filter that selects only these collections]]) to build a map from URI to URL (or vice-versa). This way, we can eliminate the need to provide both the URI and URL of the collection.
